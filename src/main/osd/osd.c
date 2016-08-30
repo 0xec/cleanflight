@@ -37,18 +37,11 @@
 #include "config/parameter_group.h"
 #include "config/parameter_group_ids.h"
 
-#include "common/printf.h"
 #include "common/maths.h"
 #include "common/utils.h"
+#include "common/streambuf.h"
 
-#include "fc/rc_controls.h" // FIXME dependency on FC code for throttle status
-
-#include "sensors/battery.h"
-
-#include "drivers/adc.h"
 #include "drivers/system.h"
-#include "drivers/gpio.h"
-#include "drivers/light_led.h"
 #include "drivers/video.h"
 #include "drivers/video_textscreen.h"
 
@@ -64,15 +57,52 @@
 PG_REGISTER(osdFontConfig_t, osdFontConfig, PG_OSD_FONT_CONFIG, 0);
 PG_REGISTER_WITH_RESET_TEMPLATE(osdVideoConfig_t, osdVideoConfig, PG_OSD_VIDEO_CONFIG, 0);
 
+PG_REGISTER_WITH_RESET_FN(osdElementConfig_t, osdElementConfig, PG_OSD_ELEMENT_CONFIG, 0);
+
 #ifndef DEFAULT_VIDEO_MODE
-// the reason for the NTSC default is that there are probably more NTSC capable screens than PAL in the world.
-// Also most PAL screens can also display NTSC but not vice-versa.  PAL = more lines, less FPS.  NTSC = fewer lines, more FPS.
-#define DEFAULT_VIDEO_MODE VIDEO_NTSC
+#define DEFAULT_VIDEO_MODE VIDEO_AUTO
 #endif
 
 PG_RESET_TEMPLATE(osdVideoConfig_t, osdVideoConfig,
     .videoMode = DEFAULT_VIDEO_MODE,
 );
+
+const uint16_t osdSupportedElementIds[] = {
+    OSD_ELEMENT_ON_DURATION,
+    OSD_ELEMENT_ARMED_DURATION,
+    OSD_ELEMENT_MAH_DRAWN,
+    OSD_ELEMENT_AMPERAGE,
+    OSD_ELEMENT_VOLTAGE_5V,
+    OSD_ELEMENT_VOLTAGE_12V,
+    OSD_ELEMENT_VOLTAGE_BATTERY,
+    OSD_ELEMENT_VOLTAGE_BATTERY_FC,
+    OSD_ELEMENT_FLIGHT_MODE,
+    OSD_ELEMENT_INDICATOR_MAG,
+    OSD_ELEMENT_INDICATOR_BARO,
+    OSD_ELEMENT_RSSI_FC,
+};
+
+const uint8_t osdSupportedElementIdsCount = ARRAYLEN(osdSupportedElementIds);
+
+static const element_t osdDefaultElements[] = {
+    {  2,  1, EF_ENABLED | EF_FLASH_ON_DISCONNECT, OSD_ELEMENT_RSSI_FC },
+    { 20,  1, EF_ENABLED | EF_FLASH_ON_DISCONNECT, OSD_ELEMENT_INDICATOR_MAG },
+    { 22,  1, EF_ENABLED | EF_FLASH_ON_DISCONNECT, OSD_ELEMENT_INDICATOR_BARO },
+    { 24,  1, EF_ENABLED | EF_FLASH_ON_DISCONNECT, OSD_ELEMENT_FLIGHT_MODE },
+    {  7, -4, EF_ENABLED, OSD_ELEMENT_ON_DURATION },
+    { 18, -4, EF_ENABLED, OSD_ELEMENT_ARMED_DURATION },
+    {  2, -3, EF_ENABLED, OSD_ELEMENT_VOLTAGE_12V },
+    { 18, -3, EF_ENABLED, OSD_ELEMENT_VOLTAGE_BATTERY },
+    {  3, -2, EF_ENABLED, OSD_ELEMENT_VOLTAGE_5V },
+    { 19, -2, EF_ENABLED | EF_FLASH_ON_DISCONNECT, OSD_ELEMENT_VOLTAGE_BATTERY_FC },
+    {  2, -1, EF_ENABLED, OSD_ELEMENT_AMPERAGE },
+    { 18, -1, EF_ENABLED, OSD_ELEMENT_MAH_DRAWN },
+};
+
+void pgResetFn_osdElementConfig(osdElementConfig_t *osdElementConfig) {
+    memset(osdElementConfig, 0, sizeof(osdElementConfig_t));
+    memcpy_fn(&osdElementConfig->elements, &osdDefaultElements, sizeof(osdDefaultElements));
+}
 
 osdState_t osdState;
 
@@ -162,13 +192,31 @@ void osdDisplayMotors(void)
 
 void osdUpdate(void)
 {
-    char lineBuffer[31];
+    TIME_SECTION_BEGIN(0);
 
-    //TIME_SECTION_BEGIN(0);
+    uint32_t now = micros();
+
+    static bool armed = false;
+    static uint32_t armedAt = 0;
+
+    bool armedNow = fcStatus.fcState & (1 << FC_STATE_ARM);
+    if (armed != armedNow) {
+        if (armedNow) {
+            armedAt = now;
+        }
+
+        armed = armedNow;
+    }
+
+    if (armed) {
+        if (now > armedAt) {
+
+            fcStatus.armedDuration = (now - armedAt) / 1000;
+        }
+    }
 
     osdClearScreen();
 
-    uint32_t now = micros();
 
     // test all timers, setting corresponding bits
     uint32_t timActive = 0;
@@ -198,40 +246,13 @@ void osdUpdate(void)
 
     bool showNowOrFlashWhenFCTimeoutOccured = !mspClientStatus.timeoutOccured || (mspClientStatus.timeoutOccured && timerState[tim10Hz].toggle);
 
-    //
-    // top
-    //
+    osdSetElementFlashOnDisconnectState(showNowOrFlashWhenFCTimeoutOccured);
 
-    int row = 1; // zero based.
+    for (uint8_t elementIndex = 0; elementIndex < MAX_OSD_ELEMENT_COUNT; elementIndex++) {
+        element_t *element = &osdElementConfig()->elements[elementIndex];
 
-    if (showNowOrFlashWhenFCTimeoutOccured) {
-        tfp_sprintf(lineBuffer, "RSSI:%3d%%", fcStatus.rssi / 10);
-        osdPrintAt(2, row, lineBuffer);
+        osdDrawTextElement(element);
     }
-
-    char *flightMode;
-    if (fcStatus.fcState & (1 << FC_STATE_ANGLE)) {
-        flightMode = "ANGL";
-    } else if (fcStatus.fcState & (1 << FC_STATE_HORIZON)) {
-        flightMode = "HORI";
-    } else if (fcStatus.fcState & (1 << FC_STATE_ARM)) {
-        flightMode  = "ACRO";
-    } else  {
-        flightMode  = " OFF";
-    }
-
-    if (showNowOrFlashWhenFCTimeoutOccured) {
-        tfp_sprintf(lineBuffer, "%1s %1s %4s",
-            fcStatus.fcState & (1 << FC_STATE_MAG) ? "M" : "",
-            fcStatus.fcState & (1 << FC_STATE_BARO) ? "B" : "",
-            flightMode
-        );
-        osdPrintAt(20, row, lineBuffer);
-    }
-
-    //
-    // middle
-    //
 
     //
     // flash the logo for a few seconds
@@ -258,54 +279,9 @@ void osdUpdate(void)
         }
     }
 
-    //
-    // bottom
-    //
-
-    row = osdTextScreen.height - 3;
-
-    uint8_t voltage12v = batteryAdcToVoltage(adcGetChannel(ADC_POWER_12V));
-    tfp_sprintf(lineBuffer, "12V:%3d.%dV", voltage12v / 10, voltage12v % 10);
-    osdPrintAt(2, row, lineBuffer);
-
-    tfp_sprintf(lineBuffer, "BAT:%3d.%dV", vbat / 10, vbat % 10);
-    osdPrintAt(18, row, lineBuffer);
-
-    row++;
-
-    const element_t voltage5VElement = {
-        3, row, true, OSD_ELEMENT_VOLTAGE_5V
-    };
-    osdDrawTextElement(&voltage5VElement);
-
-    if (showNowOrFlashWhenFCTimeoutOccured) {
-        const element_t voltageFCVBATElement = {
-            19, row, true, OSD_ELEMENT_VOLTAGE_FC_VBAT
-        };
-        osdDrawTextElement(&voltageFCVBATElement);
-    }
-
-    row++;
-
-    const element_t amperageElement = {
-        2, row, true, OSD_ELEMENT_AMPERAGE
-    };
-    osdDrawTextElement(&amperageElement);
-
-    const element_t mahDrawnElement = {
-        18, row, true, OSD_ELEMENT_MAH_DRAWN
-    };
-    osdDrawTextElement(&mahDrawnElement);
-
-    const element_t timeElement = {
-        5, 2, true, OSD_ELEMENT_ON_TIME
-    };
-    osdDrawTextElement(&timeElement);
-
-
     osdDisplayMotors();
 
-    //TIME_SECTION_END(0);
+    TIME_SECTION_END(0);
 
     osdHardwareUpdate();
 

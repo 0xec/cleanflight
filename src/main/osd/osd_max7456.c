@@ -35,6 +35,7 @@
 
 #include "common/maths.h"
 #include "common/utils.h"
+#include "common/streambuf.h"
 
 #include "config/parameter_group.h"
 #include "config/parameter_group_ids.h"
@@ -49,6 +50,7 @@
 #include "drivers/video_max7456.h"
 
 #include "osd/config.h"
+#include "osd/osd_element.h"
 #include "osd/osd_screen.h"
 
 #include "osd/fonts/font_max7456_12x18.h"
@@ -56,7 +58,7 @@
 #include "osd/osd.h"
 
 
-char textScreenBuffer[MAX7456_PAL_CHARACTER_COUNT]; // PAL has more characters than NTSC.
+TEXT_SCREEN_CHAR textScreenBuffer[MAX7456_PAL_CHARACTER_COUNT]; // PAL has more characters than NTSC.
 const uint8_t *asciiToFontMapping = &font_max7456_12x18_asciiToFontMapping[0];
 
 #ifdef STM32F303
@@ -147,7 +149,7 @@ void osdHardwareUpdate(void)
 {
     max7456_updateStatus();
 
-    osdState.videoMode = max7456State.detectedVideoMode;
+    osdState.videoMode = max7456State.configuredVideoMode;
     osdState.cameraConnected = !max7456State.los;
 
     max7456_writeScreen(&osdTextScreen, textScreenBuffer);
@@ -222,4 +224,16 @@ void osdHardwareDisplayMotor(uint8_t x, uint8_t y, uint8_t percent)
     osdSetRawCharacterAtPosition(13 + x, osdTextScreen.height - 4 + y, c);
 }
 
+void osdSetFontCharacter(uint8_t address, sbuf_t *src)
+{
+    if (sbufBytesRemaining(src) != MAX7456_CHARACTER_BUFFER_SIZE) {
+        return;
+    }
+
+    uint8_t characterBitmap[MAX7456_CHARACTER_BUFFER_SIZE];
+    for (int i = 0; i < MAX7456_CHARACTER_BUFFER_SIZE; i++) {
+        characterBitmap[i] = sbufReadU8(src);
+    }
+    max7456_setFontCharacter(address, characterBitmap);
+}
 
