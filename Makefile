@@ -84,122 +84,158 @@ USBPERIPH_SRC = $(notdir $(wildcard $(USBFS_DIR)/src/*.c))
 CSOURCES        := $(shell find $(SRC_DIR) -name '*.c')
 
 ifeq ($(TARGET),$(filter $(TARGET),$(F3_TARGETS)))
-# F3 TARGETS
+	# F3 TARGETS
 
-STDPERIPH_DIR	= $(ROOT)/lib/main/STM32F30x_StdPeriph_Driver
+	STDPERIPH_DIR	= $(ROOT)/lib/main/STM32F30x_StdPeriph_Driver
 
-STDPERIPH_SRC = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
+	STDPERIPH_SRC = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
 
-EXCLUDES	= stm32f30x_crc.c \
-		stm32f30x_can.c
+	EXCLUDES	= stm32f30x_crc.c \
+			stm32f30x_can.c
 
-STDPERIPH_SRC := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
+	STDPERIPH_SRC := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
 
-DEVICE_STDPERIPH_SRC = \
-		$(STDPERIPH_SRC)
+	DEVICE_STDPERIPH_SRC = \
+			$(STDPERIPH_SRC)
 
 
-VPATH		:= $(VPATH):$(CMSIS_DIR)/CM1/CoreSupport:$(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x
-CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM1/CoreSupport/*.c \
-			   $(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x/*.c))
+	VPATH		:= $(VPATH):$(CMSIS_DIR)/CM1/CoreSupport:$(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x
+	CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM1/CoreSupport/*.c \
+				   $(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x/*.c))
 
-INCLUDE_DIRS := $(INCLUDE_DIRS) \
-		   $(STDPERIPH_DIR)/inc \
-		   $(CMSIS_DIR)/CM1/CoreSupport \
-		   $(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x
+	INCLUDE_DIRS := $(INCLUDE_DIRS) \
+			   $(STDPERIPH_DIR)/inc \
+			   $(CMSIS_DIR)/CM1/CoreSupport \
+			   $(CMSIS_DIR)/CM1/DeviceSupport/ST/STM32F30x
 
-ifeq ($(TARGET),$(filter $(TARGET),$(VCP_TARGETS)))
-INCLUDE_DIRS := $(INCLUDE_DIRS) \
-		   $(USBFS_DIR)/inc \
-		   $(ROOT)/src/main/vcp
+	ifeq ($(TARGET),$(filter $(TARGET),$(VCP_TARGETS)))
+		INCLUDE_DIRS := $(INCLUDE_DIRS) \
+				   $(USBFS_DIR)/inc \
+				   $(ROOT)/src/main/vcp
 
-VPATH := $(VPATH):$(USBFS_DIR)/src
+		VPATH := $(VPATH):$(USBFS_DIR)/src
 
-DEVICE_STDPERIPH_SRC := $(DEVICE_STDPERIPH_SRC)\
-		   $(USBPERIPH_SRC)
+		DEVICE_STDPERIPH_SRC := $(DEVICE_STDPERIPH_SRC)\
+				   $(USBPERIPH_SRC)
 
-endif
+	endif
 
-LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f303_$(FLASH_SIZE)k.ld
+	LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f303_$(FLASH_SIZE)k.ld
 
-ARCH_FLAGS	 = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
-DEVICE_FLAGS = -DSTM32F303xC -DSTM32F303
-TARGET_FLAGS = -D$(TARGET)
+	ARCH_FLAGS	 = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -fsingle-precision-constant -Wdouble-promotion
+	DEVICE_FLAGS = -DSTM32F303xC -DSTM32F303
+	TARGET_FLAGS = -D$(TARGET)
 
 else ifeq ($(TARGET),$(filter $(TARGET),EUSTM32F103RC PORT103R))
-# TARGETS: EUSTM32F103RC PORT103R
+	# TARGETS: EUSTM32F103RC PORT103R
 
 
-STDPERIPH_DIR	 = $(ROOT)/lib/main/STM32F10x_StdPeriph_Driver
+	STDPERIPH_DIR	 = $(ROOT)/lib/main/STM32F10x_StdPeriph_Driver
 
-STDPERIPH_SRC = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
+	STDPERIPH_SRC = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
 
-EXCLUDES	= stm32f10x_crc.c \
-		stm32f10x_cec.c \
-		stm32f10x_can.c
+	EXCLUDES	= stm32f10x_crc.c \
+			stm32f10x_cec.c \
+			stm32f10x_can.c
 
-STDPERIPH_SRC := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
+	STDPERIPH_SRC := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
 
-# Search path and source files for the CMSIS sources
-VPATH		:= $(VPATH):$(CMSIS_DIR)/CM3/CoreSupport:$(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x
-CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM3/CoreSupport/*.c \
-			   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x/*.c))
+	# Search path and source files for the CMSIS sources
+	VPATH		:= $(VPATH):$(CMSIS_DIR)/CM3/CoreSupport:$(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x
+	CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM3/CoreSupport/*.c \
+				   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x/*.c))
 
-INCLUDE_DIRS := $(INCLUDE_DIRS) \
-		   $(STDPERIPH_DIR)/inc \
-		   $(CMSIS_DIR)/CM3/CoreSupport \
-		   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x \
+	INCLUDE_DIRS := $(INCLUDE_DIRS) \
+			   $(STDPERIPH_DIR)/inc \
+			   $(CMSIS_DIR)/CM3/CoreSupport \
+			   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x \
 
-LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f103_$(FLASH_SIZE)k.ld
+	LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f103_$(FLASH_SIZE)k.ld
 
-ARCH_FLAGS	 = -mthumb -mcpu=cortex-m3
-TARGET_FLAGS = -D$(TARGET)
-DEVICE_FLAGS = -DSTM32F10X_HD -DSTM32F10X
+	ARCH_FLAGS	 = -mthumb -mcpu=cortex-m3
+	TARGET_FLAGS = -D$(TARGET)
+	DEVICE_FLAGS = -DSTM32F10X_HD -DSTM32F10X
 
-DEVICE_STDPERIPH_SRC = $(STDPERIPH_SRC)
+	DEVICE_STDPERIPH_SRC = $(STDPERIPH_SRC)
 
+else ifeq ($(TARGET),$(filter $(TARGET),NUCLEO))
+
+	STDPERIPH_DIR	= $(ROOT)/lib/main/STM32F4xx_StdPeriph_Driver
+
+	STDPERIPH_SRC   = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
+
+	EXCLUDES	    = stm32f4xx_crc.c stm32f4xx_can.c
+
+	STDPERIPH_SRC  := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
+
+	DEVICE_STDPERIPH_SRC = $(STDPERIPH_SRC)
+
+	# -mcpu=cortex-m4 -mthumb -mfloat-abi=soft
+	# -Og -fmessage-length=0 -fsigned-char 
+	# -ffunction-sections -fdata-sections -fno-move-loop-invariants 
+	# -Wall -Wextra  -g3 
+	# -DDEBUG -DUSE_FULL_ASSERT -DOS_USE_SEMIHOSTING -DTRACE
+	# -DOS_USE_TRACE_SEMIHOSTING_DEBUG -DSTM32F401xE -DUSE_HAL_DRIVER -DHSE_VALUE=8000000 
+	# -I"../include" -I"../system/include" -I"../system/include/cmsis" -I"../system/include/stm32f4-hal" 
+	# -std=gnu11 -MMD -MP -MF"system/src/newlib/_syscalls.d" 
+	# -MT"system/src/newlib/_syscalls.o" -c -o "system/src/newlib/_syscalls.o" "../system/src/newlib/_syscalls.c"
+
+	VPATH		:= $(VPATH):$(CMSIS_DIR)/CM4/CoreSupport:$(CMSIS_DIR)/CM4/DeviceSupport/ST/STM32F4xx
+	CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM1/CoreSupport/*.c \
+				   $(CMSIS_DIR)/CM4/DeviceSupport/ST/STM32F4xx/*.c))
+
+	INCLUDE_DIRS := $(INCLUDE_DIRS) \
+			   $(STDPERIPH_DIR)/inc \
+			   $(CMSIS_DIR)/CM4/CoreSupport \
+			   $(CMSIS_DIR)/CM4/DeviceSupport/ST/STM32F4xx
+
+	LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f401_$(FLASH_SIZE)k.ld
+
+	ARCH_FLAGS	 = -mthumb -mcpu=cortex-m4 -mfloat-abi=hard -Og -fmessage-length=0 -fsigned-char -fno-move-loop-invariants 
+	DEVICE_FLAGS = -DSTM32F401xE -DSTM32F401RE -DSTM32F401xx
+	TARGET_FLAGS = -D$(TARGET)
 else
-# F1 TARGETS
+	# F1 TARGETS
 
-STDPERIPH_DIR	 = $(ROOT)/lib/main/STM32F10x_StdPeriph_Driver
+	STDPERIPH_DIR	 = $(ROOT)/lib/main/STM32F10x_StdPeriph_Driver
 
-STDPERIPH_SRC = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
+	STDPERIPH_SRC = $(notdir $(wildcard $(STDPERIPH_DIR)/src/*.c))
 
-EXCLUDES	= stm32f10x_crc.c \
-		stm32f10x_cec.c \
-		stm32f10x_can.c
+	EXCLUDES	= stm32f10x_crc.c \
+			stm32f10x_cec.c \
+			stm32f10x_can.c
 
-STDPERIPH_SRC := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
+	STDPERIPH_SRC := $(filter-out ${EXCLUDES}, $(STDPERIPH_SRC))
 
-# Search path and source files for the CMSIS sources
-VPATH		:= $(VPATH):$(CMSIS_DIR)/CM3/CoreSupport:$(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x
-CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM3/CoreSupport/*.c \
-			   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x/*.c))
+	# Search path and source files for the CMSIS sources
+	VPATH		:= $(VPATH):$(CMSIS_DIR)/CM3/CoreSupport:$(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x
+	CMSIS_SRC	 = $(notdir $(wildcard $(CMSIS_DIR)/CM3/CoreSupport/*.c \
+				   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x/*.c))
 
-INCLUDE_DIRS := $(INCLUDE_DIRS) \
-		   $(STDPERIPH_DIR)/inc \
-		   $(CMSIS_DIR)/CM3/CoreSupport \
-		   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x \
+	INCLUDE_DIRS := $(INCLUDE_DIRS) \
+			   $(STDPERIPH_DIR)/inc \
+			   $(CMSIS_DIR)/CM3/CoreSupport \
+			   $(CMSIS_DIR)/CM3/DeviceSupport/ST/STM32F10x \
 
-DEVICE_STDPERIPH_SRC = $(STDPERIPH_SRC)
+	DEVICE_STDPERIPH_SRC = $(STDPERIPH_SRC)
 
-ifeq ($(TARGET),$(filter $(TARGET),$(VCP_TARGETS)))
-INCLUDE_DIRS := $(INCLUDE_DIRS) \
-		   $(USBFS_DIR)/inc \
-		   $(ROOT)/src/main/vcp
+	ifeq ($(TARGET),$(filter $(TARGET),$(VCP_TARGETS)))
+		INCLUDE_DIRS := $(INCLUDE_DIRS) \
+				   $(USBFS_DIR)/inc \
+				   $(ROOT)/src/main/vcp
 
-VPATH := $(VPATH):$(USBFS_DIR)/src
+		VPATH := $(VPATH):$(USBFS_DIR)/src
 
-DEVICE_STDPERIPH_SRC := $(DEVICE_STDPERIPH_SRC) \
-		   $(USBPERIPH_SRC)
+		DEVICE_STDPERIPH_SRC := $(DEVICE_STDPERIPH_SRC) \
+				   $(USBPERIPH_SRC)
 
-endif
+	endif
 
-LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f103_$(FLASH_SIZE)k.ld
+	LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f103_$(FLASH_SIZE)k.ld
 
-ARCH_FLAGS	 = -mthumb -mcpu=cortex-m3
-TARGET_FLAGS = -D$(TARGET)
-DEVICE_FLAGS = -DSTM32F10X_MD -DSTM32F10X
+	ARCH_FLAGS	 = -mthumb -mcpu=cortex-m3
+	TARGET_FLAGS = -D$(TARGET)
+	DEVICE_FLAGS = -DSTM32F10X_MD -DSTM32F10X
 
 endif #TARGETS
 
@@ -534,6 +570,8 @@ STM32F30x_COMMON_SRC = \
 		   drivers/sound_beeper_stm32f30x.c \
 		   drivers/system_stm32f30x.c
 
+STM32F4xx_COMMON_SRC = 
+
 STM32F30x_FC_COMMON_SRC = \
 		   drivers/display_ug2864hsweg01.h \
 		   drivers/timer.c \
@@ -813,6 +851,15 @@ SPRACINGF3OSD_SRC = \
 		   $(SYSTEM_SRC) \
 		   $(VCP_SRC)
 
+
+
+NUCLEO_SRC = \
+			$(STM32F4xx_COMMON_SRC) \
+		   	$(FC_COMMON_SRC) \
+		   	$(SYSTEM_SRC)
+
+
+
 # Search path and source files for the ST stdperiph library
 VPATH		:= $(VPATH):$(STDPERIPH_DIR)/src
 
@@ -1013,18 +1060,18 @@ $(TARGET_ELF):  $(TARGET_OBJS)
 $(OBJECT_DIR)/$(TARGET)/%.o: %.c
 	@mkdir -p $(dir $@)
 	@echo %% $(notdir $<)
-	@$(CC) -c -o $@ $(CFLAGS) $<
+	$(CC) -c -o $@ $(CFLAGS) $<
 
 # Assemble
 $(OBJECT_DIR)/$(TARGET)/%.o: %.s
 	@mkdir -p $(dir $@)
 	@echo %% $(notdir $<)
-	@$(CC) -c -o $@ $(ASFLAGS) $<
+	$(CC) -c -o $@ $(ASFLAGS) $<
 
 $(OBJECT_DIR)/$(TARGET)/%.o: %.S
 	@mkdir -p $(dir $@)
 	@echo %% $(notdir $<)
-	@$(CC) -c -o $@ $(ASFLAGS) $<
+	$(CC) -c -o $@ $(ASFLAGS) $<
 
 
 
