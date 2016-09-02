@@ -259,6 +259,10 @@ static void max7456_setVideoMode(videoMode_e videoMode)
     {
         case VIDEO_AUTO:
             // assume NTSC rather than leaving using an unknown state
+
+            // the reason for the NTSC default is that there are probably more NTSC capable screens than PAL in the world.
+            // Also most PAL screens can also display NTSC but not vice-versa.  PAL = more lines, less FPS.  NTSC = fewer lines, more FPS.
+
         case VIDEO_NTSC:
             max7456_videoModeMask = MAX7456_MODE_MASK_NTSC;
             max7456Screen.height = MAX7456_NTSC_ROW_COUNT;
@@ -374,8 +378,7 @@ void max7456_init(videoMode_e desiredVideoMode)
     max7456_write(MAX7456_REG_OSDBL, blackLevelValue);
 }
 
-#define MAX7456_CHARACTER_BUFFER_SIZE 54
-static void max7456_setFontCharacter(uint8_t characterIndex, const uint8_t *characterBitmap)
+void max7456_setFontCharacter(uint8_t characterIndex, const uint8_t *characterBitmap)
 {
     // cannot update font NVM with OSD enabled.
     max7456_disableOSD();
@@ -461,7 +464,7 @@ void max7456_waitForVSync(void)
     }
 }
 
-void max7456_writeScreen(textScreen_t *textScreen, char *screenBuffer)
+void max7456_writeScreen(textScreen_t *textScreen, TEXT_SCREEN_CHAR *screenBuffer)
 {
     ENABLE_MAX7456;
 
@@ -482,7 +485,7 @@ void max7456_writeScreen(textScreen_t *textScreen, char *screenBuffer)
 
     for (int y = 0; y < textScreen->height; y++) {
         unsigned int rowOffset = (y * textScreen->width);
-        char *buffer = &screenBuffer[rowOffset];
+        TEXT_SCREEN_CHAR *buffer = &screenBuffer[rowOffset];
 
         if (y == 8) {
             MAX7456_TIME_SECTION_END(1);

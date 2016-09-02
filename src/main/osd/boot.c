@@ -55,6 +55,7 @@
 
 #include "fc/rc_controls.h" // FIXME for throttle status, not needed by OSD.
 
+#include "osd/osd_element.h"
 #include "osd/osd.h"
 #include "osd/osd_serial.h"
 
@@ -88,6 +89,15 @@ PG_REGISTER_WITH_RESET_TEMPLATE(systemConfig_t, systemConfig, PG_SYSTEM_CONFIG, 
 PG_RESET_TEMPLATE(systemConfig_t, systemConfig,
     .i2c_highspeed = 0,
 );
+
+#ifdef CUSTOM_FLASHCHIP
+PG_REGISTER(flashchipConfig_t, flashchipConfig, PG_DRIVER_FLASHCHIP_CONFIG, 0);
+PG_RESET_TEMPLATE(flashchipConfig_t, flashchipConfig,
+    .flashchip_id = 0,
+    .flashchip_nsect = 0,
+    .flashchip_pps = 0,
+);
+#endif
 
 typedef enum {
     SYSTEM_STATE_INITIALISING        = 0,

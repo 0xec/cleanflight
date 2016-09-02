@@ -57,6 +57,7 @@
 #define NAZE_SPI_CS_PIN       GPIO_Pin_12
 #define NAZE_CS_GPIO_CLK_PERIPHERAL RCC_APB2Periph_GPIOB
 
+#define CUSTOM_FLASHCHIP
 // We either have this 16mbit flash chip on SPI or the MPU6500 acc/gyro depending on board revision:
 #define M25P16_CS_GPIO        NAZE_SPI_CS_GPIO
 #define M25P16_CS_PIN         NAZE_SPI_CS_PIN
@@ -222,6 +223,7 @@
 #undef TARGET_BOARD_IDENTIFIER
 #define TARGET_BOARD_IDENTIFIER "AFF1" // AlienFlight F1.
 #undef BOARD_HAS_VOLTAGE_DIVIDER
+#undef GTUNE
 
 #define DEFAULT_RX_FEATURE FEATURE_RX_SERIAL
 #define DEFAULT FEATURES FEATURE_MOTOR_STOP

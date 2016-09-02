@@ -149,7 +149,7 @@ INCLUDE_DIRS := $(INCLUDE_DIRS) \
 LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f103_$(FLASH_SIZE)k.ld
 
 ARCH_FLAGS	 = -mthumb -mcpu=cortex-m3
-TARGET_FLAGS = -D$(TARGET) -pedantic
+TARGET_FLAGS = -D$(TARGET)
 DEVICE_FLAGS = -DSTM32F10X_HD -DSTM32F10X
 
 DEVICE_STDPERIPH_SRC = $(STDPERIPH_SRC)
@@ -194,7 +194,7 @@ endif
 LD_SCRIPT	 = $(LINKER_DIR)/stm32_flash_f103_$(FLASH_SIZE)k.ld
 
 ARCH_FLAGS	 = -mthumb -mcpu=cortex-m3
-TARGET_FLAGS = -D$(TARGET) -pedantic
+TARGET_FLAGS = -D$(TARGET)
 DEVICE_FLAGS = -DSTM32F10X_MD -DSTM32F10X
 
 endif #TARGETS
@@ -707,6 +707,7 @@ SPRACINGF3EVO_SRC	 = \
 		   drivers/display_ug2864hsweg01.h \
 		   drivers/light_ws2811strip.c \
 		   drivers/light_ws2811strip_stm32f30x.c \
+		   drivers/serial_softserial.c \
 		   drivers/serial_usb_vcp.c \
 		   drivers/sdcard.c \
 		   drivers/sdcard_standard.c \
@@ -815,10 +816,17 @@ VPATH		:= $(VPATH):$(STDPERIPH_DIR)/src
 # Things that might need changing to use different tools
 #
 
+# Find out if ccache is installed on the system
+CCACHE := ccache
+RESULT = $(shell (which $(CCACHE) > /dev/null 2>&1; echo $$?) )
+ifneq ($(RESULT),0)
+CCACHE :=
+endif
+
 # Tool names
-CC		 = arm-none-eabi-gcc
-OBJCOPY		 = arm-none-eabi-objcopy
-SIZE		 = arm-none-eabi-size
+CC          := $(CCACHE) arm-none-eabi-gcc
+OBJCOPY     := arm-none-eabi-objcopy
+SIZE        := arm-none-eabi-size
 
 #
 # Tool options.
@@ -845,7 +853,7 @@ CFLAGS		 = $(ARCH_FLAGS) \
 		   $(addprefix -I,$(INCLUDE_DIRS)) \
 		   $(DEBUG_FLAGS) \
 		   -std=gnu99 \
-		   -Wall -Wextra -Wunsafe-loop-optimizations -Wdouble-promotion -Wundef \
+		   -Wall -Wpedantic -Wextra -Wunsafe-loop-optimizations -Wdouble-promotion -Wundef \
 		   -ffunction-sections \
 		   -fdata-sections \
 		   $(DEVICE_FLAGS) \

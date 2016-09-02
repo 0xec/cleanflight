@@ -15,11 +15,22 @@
  * along with Cleanflight.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+extern const uint16_t osdSupportedElementIds[];
+extern const uint8_t osdSupportedElementIdsCount;
+
 typedef struct osdFontConfig_s {
     uint16_t fontVersion;
 } osdFontConfig_t;
 
 PG_DECLARE(osdFontConfig_t, osdFontConfig);
+
+#define MAX_OSD_ELEMENT_COUNT 32
+
+typedef struct osdElementConfig_s {
+    element_t elements[MAX_OSD_ELEMENT_COUNT];
+} osdElementConfig_t;
+
+PG_DECLARE(osdElementConfig_t, osdElementConfig);
 
 typedef struct osdVideoConfig_s {
     uint8_t videoMode;
@@ -53,3 +64,5 @@ void osdHardwareCheck(void);
 void osdHardwareDrawLogo(void);
 bool osdIsCameraConnected(void);
 void osdHardwareDisplayMotor(uint8_t x, uint8_t y, uint8_t percent);
+
+void osdSetFontCharacter(uint8_t address, sbuf_t *src);
